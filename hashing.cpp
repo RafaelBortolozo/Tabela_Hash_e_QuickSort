@@ -17,20 +17,26 @@ typedef struct sLista{
 
 Lista *chave[CHAVES];
 void criaListas();
+void readArquivoTXT();
 void imprimeListas();
 int hash(char letra);
 void insereElemento(char *nome);
+int qtdCaracteres(char *nome);
+void pesquisaElemento(char *nome);
+void removerElemento(char *nome);
+void freeElementos();
 
 main(){
 	criaListas();
-	
-	FILE *file = fopen("nomes.txt", "r");
-	char nome[QTDCARACTERES];
-	while(fgets(nome, QTDCARACTERES, file) != NULL){
-		insereElemento(nome);
-	}
+    readArquivoTXT();
 
 	imprimeListas();
+	//Pesquisa e remocao de nomes    
+        //char pesquisar[]="MIQUAELI";
+	    //pesquisaElemento(pesquisar);
+        //removerElemento(pesquisar);
+    freeElementos();
+    imprimeListas();
 }
 
 void criaListas(){
@@ -41,26 +47,35 @@ void criaListas(){
         chave[i]->size=0;
     }
 }
-	
+
+void readArquivoTXT(){
+    FILE *file = fopen("nomes.txt", "r");
+	char nome[QTDCARACTERES];
+	while(fgets(nome, QTDCARACTERES, file) != NULL){
+		insereElemento(nome);
+	}
+}
+
 void imprimeListas(){
 	Elemento *aux;
 	int total=0;
 	//imprime os nomes
-	for(int i=0; i<CHAVES; i++){
+	/*for(int i=0; i<CHAVES; i++){
 		aux= chave[i]->head;
+        
 		for(int x=0; x<chave[i]->size ;x++){
 			printf("%i- %s",i,aux->nome);
-			total++;
 			aux= aux->next;
 		}
 		printf("\n\n");
-    }
+    }*/
 
 	//imprime o size de cada lista
 	for(int i=0; i<CHAVES; i++){
-		printf("%i- %i\n\n",i,chave[i]->size);
+		printf("\n%i- %i\n",i,chave[i]->size);
+        total= total + chave[i]->size;
 	}
-	printf("total de nomes: %i", total);
+	printf("\ntotal de nomes: %i\n", total);
 }
 
 int hash(char letra){
@@ -97,4 +112,94 @@ void insereElemento(char *nome){
         pivo->next=novo_elemento;
     }
     chave[nHash]->size++;
+}
+
+int qtdCaracteres(char *nome){
+    int cont;
+    while(nome[cont] != '\0'){
+        ++cont;
+    }
+    return cont-1;
+}
+
+void pesquisaElemento(char *nome){
+    int y= hash(nome[0]);
+    int numCaracteres= qtdCaracteres(nome);
+    int i;
+    Elemento *aux= chave[y]->head;
+    for(int x=0; x<chave[y]->size; x++){
+		i=0;
+        while(i<numCaracteres){
+            if(aux->nome[i]==nome[i]){
+                i++;
+            }else{
+            	break;
+			}
+            if(i==numCaracteres){
+                printf("\n\nO nome (%s) foi encontrado na chave[%i]", nome, y);
+                return;
+            } 
+        }
+    aux=aux->next;
+    }
+    printf("\n\nO nome (%s) nao existe na tabela", nome);
+}
+
+void removerElemento(char *nome){
+    int y= hash(nome[0]);
+    int numCaracteres= qtdCaracteres(nome);
+    int i;
+    Elemento *aux= chave[y]->head;
+    for(int x=0; x<chave[y]->size; x++){
+		i=0;
+        while(i<numCaracteres){
+            if(aux->nome[i]==nome[i]){
+                i++;
+            }else{
+            	break;
+			}
+            
+            if(i==numCaracteres){
+                if(aux==chave[y]->head){
+                    chave[y]->head = aux->next;
+                    if(chave[y]->head==NULL){
+                        chave[y]->tail=NULL;
+                    }else{
+                        aux->next->prev=NULL;
+                    }
+                }else{
+                    aux->prev->next = aux->next;
+                    if(aux->next==NULL){
+                        chave[y]->tail= aux->prev;
+                    }else{
+                        aux->next->prev = aux->prev;
+                    }
+                }
+                free(aux);
+                chave[y]->size--;
+                printf("\n\nO nome (%s) foi removido da chave[%i]", nome, y);
+                return;
+            } 
+        }
+    aux=aux->next;
+    }
+    printf("\n\n nao foi possivel remover o nome (%s), pois nao existe na tabela", nome);
+}
+
+void freeElementos(){
+    Elemento *aux;
+    for(int x=0; x<CHAVES ;x++){
+        while(chave[x]->size>0){
+            aux= chave[x]->head;
+            chave[x]->head = aux->next;
+            if(chave[x]->head==NULL){
+                chave[x]->tail=NULL;
+            }else{
+                aux->next->prev=NULL;
+            }
+            free(aux);
+            chave[x]->size--;
+        }
+        free(chave[x]);
+    }
 }
