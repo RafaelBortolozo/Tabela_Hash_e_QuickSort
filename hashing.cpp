@@ -115,11 +115,11 @@ void insereElemento(char *nome){
 }
 
 int qtdCaracteres(char *nome){
-    int cont;
+    int cont=0;
     while(nome[cont] != '\0'){
         ++cont;
     }
-    return cont-1;
+    return cont;
 }
 
 void pesquisaElemento(char *nome){
