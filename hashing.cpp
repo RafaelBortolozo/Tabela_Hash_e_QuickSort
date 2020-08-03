@@ -7,6 +7,7 @@ typedef struct sElemento{
     struct sElemento *next;
     struct sElemento *prev;
 	char nome[QTDCARACTERES];
+    int id;
 }Elemento;
 
 typedef struct sLista{ 
@@ -19,24 +20,32 @@ Lista *chave[CHAVES];
 void criaListas();
 void readArquivoTXT();
 void imprimeListas();
-int hash(char letra);
+int hash(char letra1, char letra2, char letra3);
 void insereElemento(char *nome);
 int qtdCaracteres(char *nome);
 void pesquisaElemento(char *nome);
 void removerElemento(char *nome);
 void freeElementos();
+int hashSort(char letra);
+int divideLista(int inicio, int fim);
+void quicksort(int inicio, int fim);
 
 main(){
 	criaListas();
     readArquivoTXT();
 
-	imprimeListas();
 	//Pesquisa e remocao de nomes    
-        //char pesquisar[]="MIQUAELI";
+        //char pesquisar[]="JOCELINE";
 	    //pesquisaElemento(pesquisar);
         //removerElemento(pesquisar);
-    freeElementos();
+    //freeElementos();
+    //imprimeListas();
+
+    quicksort(1, chave[0]->size);
     imprimeListas();
+
+    
+    
 }
 
 void criaListas(){
@@ -54,38 +63,42 @@ void readArquivoTXT(){
 	while(fgets(nome, QTDCARACTERES, file) != NULL){
 		insereElemento(nome);
 	}
+    fclose(file);
 }
 
 void imprimeListas(){
 	Elemento *aux;
 	int total=0;
+    int i=0;
 	//imprime os nomes
-	/*for(int i=0; i<CHAVES; i++){
+	//for(int i=0; i<CHAVES; i++){
 		aux= chave[i]->head;
         
 		for(int x=0; x<chave[i]->size ;x++){
-			printf("%i- %s",i,aux->nome);
+			printf("%i- %s",aux->id,aux->nome);
 			aux= aux->next;
 		}
 		printf("\n\n");
-    }*/
+    //}
 
 	//imprime o size de cada lista
 	for(int i=0; i<CHAVES; i++){
-		printf("\n%i- %i\n",i,chave[i]->size);
+		printf("%i\n",chave[i]->size);
         total= total + chave[i]->size;
 	}
 	printf("\ntotal de nomes: %i\n", total);
 }
 
-int hash(char letra){
-	int i= letra;
-	i= i % CHAVES;
+int hash(char *nome){
+	int l1= nome[0];
+    int l2= nome[1];
+    int l3= nome[2];
+	int i= (l1+l2+l3) % CHAVES;
 	return i;
 }
 
 void insereElemento(char *nome){
-	int nHash= hash(nome[0]);
+	int nHash= hash(nome);
 	Elemento *pivo= chave[nHash]->tail;
 	
 	Elemento *novo_elemento = (Elemento*)malloc(sizeof(Elemento));
@@ -94,7 +107,7 @@ void insereElemento(char *nome){
         novo_elemento->nome[i]= nome[i];
 		++i;
     }
-	
+
     if(chave[nHash]->size==0){
         chave[nHash]->head=novo_elemento;
         chave[nHash]->head->prev=NULL;
@@ -112,6 +125,7 @@ void insereElemento(char *nome){
         pivo->next=novo_elemento;
     }
     chave[nHash]->size++;
+    novo_elemento->id= chave[nHash]->size;
 }
 
 int qtdCaracteres(char *nome){
@@ -123,8 +137,9 @@ int qtdCaracteres(char *nome){
 }
 
 void pesquisaElemento(char *nome){
-    int y= hash(nome[0]);
+    int y= hash(nome);
     int numCaracteres= qtdCaracteres(nome);
+    printf("%i", numCaracteres);
     int i;
     Elemento *aux= chave[y]->head;
     for(int x=0; x<chave[y]->size; x++){
@@ -146,7 +161,7 @@ void pesquisaElemento(char *nome){
 }
 
 void removerElemento(char *nome){
-    int y= hash(nome[0]);
+    int y= hash(nome);
     int numCaracteres= qtdCaracteres(nome);
     int i;
     Elemento *aux= chave[y]->head;
@@ -201,5 +216,109 @@ void freeElementos(){
             chave[x]->size--;
         }
         free(chave[x]);
+    }
+}
+
+//calculo do hash exclusivo para ordenacao
+int hashSort(char letra){
+    return letra;
+}
+
+int divideLista(int inicio, int fim){
+    int esq= inicio;
+    int dir= fim;
+    Elemento *esquerda;
+    Elemento *direita;
+    Elemento *pivo;
+    Elemento *aux= chave[0]->head;
+    for(int i=1; i<=fim ;i++){
+        if(aux->id==inicio){
+            pivo=aux;
+            esquerda=aux;
+            for(i; i<=fim ;i++){
+                if(aux->id==fim){
+                    direita= aux; 
+                    break; 
+                }
+                aux=aux->next;
+            }
+            break; 
+        }
+        aux=aux->next;
+    }
+    //esquerda= aponta para o elemento do inicio da particao
+    //    pivo= aponta para o elemento do inicio da particao
+    // direita= aponta para o elemento do final da particao
+    Elemento *bEsquerda= esquerda;
+    Elemento *bDireita= direita;
+
+    while(esq<dir){
+        while(hashSort(esquerda->nome[0]) <= hashSort(pivo->nome[0])){
+            esquerda=esquerda->next;
+            esq++;
+        }
+        while(hashSort(direita->nome[0]) > hashSort(pivo->nome[0])){
+            direita=direita->prev;
+            dir--;
+        }
+        if(esq < dir){
+            //troca os dados dos elementos, o id nao eh alterado
+            //salva os dados do elemento da esquerda em um ponteiro auxiliar
+            Elemento *aux2;
+            aux2->next= esquerda->next;
+            aux2->prev= esquerda->next;
+            for(int i=0; i<QTDCARACTERES; i++){
+                aux2->nome[i]= esquerda->nome[i];
+            }
+
+            //troca os dados da esquerda pelos dados da direita
+            esquerda->next= direita->next;
+            esquerda->prev= direita->prev;
+            for(int i=0; i<QTDCARACTERES ;i++){
+                esquerda->nome[i]=direita->nome[i];
+            }
+
+            //troca os dados da direita pelos dados da esquerda, usando o auxiliar
+            direita->next= aux2->next;
+            direita->prev= aux2->prev;
+            for(int i=0; i<QTDCARACTERES ;i++){
+                direita->nome[i]=aux2->nome[i];
+            }
+        }
+    }
+    Elemento *aux2= chave[0]->head;
+    for(int i=1; i<=fim ;i++){
+        if(aux2->id==inicio){
+            break;
+        }
+        aux2=aux2->next;
+    }
+    aux2->next= direita->next;
+    aux2->prev= direita->prev;
+    for(int i=0; i<QTDCARACTERES; i++){
+        aux2->nome[i]= direita->nome[i];
+    }
+    
+    Elemento *aux3=chave[0]->head;
+    for(int i=1; i<=fim ;i++){
+        if(aux3->id==dir){
+            break;
+        }
+        aux3=aux3->next;
+    }
+    aux3->next= pivo->next;
+    aux3->prev= pivo->prev;
+    for(int i=0; i<QTDCARACTERES; i++){
+        aux3->nome[i]= pivo->nome[i];
+    }
+    return dir;
+}
+
+void quicksort(int inicio, int fim){
+	int pivo;
+    if(fim>inicio){
+        pivo= divideLista(inicio, fim);
+        quicksort(inicio, pivo-1);
+        quicksort(pivo+1, fim);
     }
 }
