@@ -244,7 +244,7 @@ int particiona(int inicio, int fim, int posCaracter, int numChave){
     char aux[QTDCARACTERES];
     char vetPivo[QTDCARACTERES];
 	
-	//percorre a lista ate encontrar o pivo (primeiro elemento)
+	//percorre a particao ate encontrar o pivo (primeiro elemento)
 	Elemento *pesquisa= chave[numChave]->head;
 	while(pesquisa->id != esq){
 		pesquisa= pesquisa->next;
@@ -262,31 +262,43 @@ int particiona(int inicio, int fim, int posCaracter, int numChave){
 	
     int pivo= hashSort(vetPivo[posCaracter]);
     while(esq < dir){
-    	while(pivo >= hashSort(elementoEsquerda->nome[posCaracter])){
-    		esq++;
-    		elementoEsquerda= elementoEsquerda->next;
-		}
 		while(pivo < hashSort(elementoDireita->nome[posCaracter])){
-			dir--;
-			elementoDireita= elementoDireita->prev;
+			if(esq < dir){
+				dir--;
+				elementoDireita= elementoDireita->prev;
+			}else{
+				return dir;
+			}
 		}
 		if(esq < dir){
-			for(int i=0; i<QTDCARACTERES; i++){
-				aux[i]= elementoEsquerda->nome[i];
-			}
 			for(int i=0; i<QTDCARACTERES; i++){
 				elementoEsquerda->nome[i]= elementoDireita->nome[i];
 			}
 			for(int i=0; i<QTDCARACTERES; i++){
-				elementoDireita->nome[i]= aux[i];
+				elementoDireita->nome[i]= vetPivo[i];
+			}
+			esq++;
+			elementoEsquerda=elementoEsquerda->next;
+		}
+		while(pivo >= hashSort(elementoEsquerda->nome[posCaracter])){
+    		if(esq < dir){
+    			esq++;
+    			elementoEsquerda= elementoEsquerda->next;
+			}else{
+				return dir;
 			}
 		}
-	}
-	for(int i=0; i<QTDCARACTERES; i++){
-		pesquisa->nome[i]= elementoDireita->nome[i];
-	}
-	for(int i=0; i<QTDCARACTERES; i++){
-		elementoDireita->nome[i]= vetPivo[i];
+		if(esq < dir){
+			for(int i=0; i<QTDCARACTERES; i++){
+				elementoDireita->nome[i]= elementoEsquerda->nome[i];
+			}
+			for(int i=0; i<QTDCARACTERES; i++){
+				elementoEsquerda->nome[i]= vetPivo[i];
+			}
+			
+			dir--;
+			elementoDireita=elementoDireita->prev;
+		}
 	}
 	return dir;
 }
