@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#define CHAVES 23 
+#define CHAVES 23
 #define QTDCARACTERES 16
 
 typedef struct sElemento{
@@ -22,16 +22,16 @@ void readArquivoTXT();
 void imprimeListas();
 int hash(char letra1, char letra2, char letra3);
 void insereElemento(char *nome);
-int qtdCaracteres(char *nome);
+int qtdcaracter(char *nome);
 void pesquisaElemento(char *nome);
 void removerElemento(char *nome);
 void freeElementos();
 
 int hashSort(char letra);
-int particiona(char nomes[][QTDCARACTERES], int inicio, int fim);
-void inicializa_quicksort(int numchave);
-void quicksort(char nomes[][QTDCARACTERES], int inicio, int fim);
-void atualizaLista(char nomes[][QTDCARACTERES], int numChave);
+void inicializa_quicksort(int numChave);
+int particiona(int inicio, int fim, int posCaracter, int numChave);
+void quicksort(int inicio, int fim, int posCaracter, int numChave);
+
 
 main(){
 	criaListas();
@@ -64,7 +64,7 @@ void readArquivoTXT(){
 	while(fgets(nome, QTDCARACTERES, file) != NULL){
 		insereElemento(nome);
 	}
-    //fclose(file);
+    fclose(file);
 }
 
 void imprimeListas(){
@@ -130,7 +130,7 @@ void insereElemento(char *nome){
     
 }
 
-int qtdCaracteres(char *nome){
+int qtdcaracter(char *nome){
     int cont=0;
     while(nome[cont] != '\0'){
         ++cont;
@@ -140,7 +140,7 @@ int qtdCaracteres(char *nome){
 
 void pesquisaElemento(char *nome){
     int y= hash(nome);
-    int numCaracteres= qtdCaracteres(nome);
+    int numCaracteres= qtdcaracter(nome);
     int i;
     Elemento *aux= chave[y]->head;
     for(int x=0; x<chave[y]->size; x++){
@@ -163,7 +163,7 @@ void pesquisaElemento(char *nome){
 
 void removerElemento(char *nome){
     int y= hash(nome);
-    int numCaracteres= qtdCaracteres(nome);
+    int numCaracteres= qtdcaracter(nome);
     int i;
     Elemento *aux= chave[y]->head;
     for(int x=0; x<chave[y]->size; x++){
@@ -227,35 +227,10 @@ void freeElementos(){
     }
 }
 
-void atualizaLista(char nomes[][QTDCARACTERES], int numChave){
-	Elemento *aux= chave[numChave]->head;
-	for(int i=0; i<chave[numChave]->size; i++){
-		for(int x=0; x<QTDCARACTERES; x++){
-			aux->nome[x]=nomes[i][x];
-		}
-		aux=aux->next;
-	}
-}
-
 void inicializa_quicksort(int numChave){
-	//vetor de nomes, nesse caso, vetor de vetor de caracteres (matriz)
-	char nomes[chave[numChave]->size][QTDCARACTERES];
-	
-	//copia os nomes da lista para ordenar
-	Elemento *aux= chave[numChave]->head;
-	for(int i=0; i<chave[numChave]->size; i++){
-        for(int x=0; x<=QTDCARACTERES; x++){
-            nomes[i][x]= aux->nome[x];
-        }
-        aux=aux->next;
-    }	
-    
-    //define o inicio e o fim da matriz
     int inicio=0;
     int fim= (chave[numChave]->size-1);
-    quicksort(nomes, inicio, fim);
-    
-    atualizaLista(nomes, numChave);
+    quicksort(inicio, fim, 0, numChave);
 }
 
 //calculo do hash exclusivo para ordenacao
@@ -263,48 +238,64 @@ int hashSort(char letra){
     return letra;
 }
 
-int particiona(char nomes[][QTDCARACTERES], int inicio, int fim){
+int particiona(int inicio, int fim, int posCaracter, int numChave){
     int esq= inicio;
     int dir= fim;
     char aux[QTDCARACTERES];
     char vetPivo[QTDCARACTERES];
-    for(int i=0; i<QTDCARACTERES; i++){
-    	vetPivo[i]=nomes[inicio][i];
+	
+	//percorre a lista ate encontrar o pivo (primeiro elemento)
+	Elemento *pesquisa= chave[numChave]->head;
+	while(pesquisa->id != esq){
+		pesquisa= pesquisa->next;
 	}
-    int pivo= hashSort(vetPivo[0]);
+	for(int i=0; i<QTDCARACTERES; i++){
+		vetPivo[i]=pesquisa->nome[i];
+	}
+	
+	//ponteiros que apontam para o elemento da esquerda e direita
+	Elemento* elementoEsquerda= pesquisa;
+	Elemento* elementoDireita= chave[numChave]->head;
+	while(elementoDireita->id != dir){
+		elementoDireita=elementoDireita->next;
+	}
+	
+    int pivo= hashSort(vetPivo[posCaracter]);
     while(esq < dir){
-    	while(pivo >= hashSort(nomes[esq][0])){
+    	while(pivo >= hashSort(elementoEsquerda->nome[posCaracter])){
     		esq++;
+    		elementoEsquerda= elementoEsquerda->next;
 		}
-		while(pivo < hashSort(nomes[dir][0])){
+		while(pivo < hashSort(elementoDireita->nome[posCaracter])){
 			dir--;
+			elementoDireita= elementoDireita->prev;
 		}
 		if(esq < dir){
 			for(int i=0; i<QTDCARACTERES; i++){
-				aux[i]= nomes[esq][i];
+				aux[i]= elementoEsquerda->nome[i];
 			}
 			for(int i=0; i<QTDCARACTERES; i++){
-				nomes[esq][i]=nomes[dir][i];
+				elementoEsquerda->nome[i]= elementoDireita->nome[i];
 			}
 			for(int i=0; i<QTDCARACTERES; i++){
-				nomes[dir][i]= aux[i];
+				elementoDireita->nome[i]= aux[i];
 			}
 		}
 	}
 	for(int i=0; i<QTDCARACTERES; i++){
-		nomes[inicio][i]= nomes[dir][i];
+		pesquisa->nome[i]= elementoDireita->nome[i];
 	}
 	for(int i=0; i<QTDCARACTERES; i++){
-		nomes[dir][i]= vetPivo[i];
+		elementoDireita->nome[i]= vetPivo[i];
 	}
 	return dir;
 }
 
-void quicksort(char nomes[][QTDCARACTERES], int inicio, int fim){
+void quicksort(int inicio, int fim, int posCaracter, int numChave){
 	int pivo;
     if(fim>inicio){
-        pivo= particiona(nomes,inicio, fim);
-        quicksort(nomes,inicio, pivo-1);
-        quicksort(nomes,pivo+1, fim);
+        pivo= particiona(inicio, fim, posCaracter, numChave);
+        quicksort(inicio, pivo-1, posCaracter, numChave);
+        quicksort(pivo+1, fim, posCaracter, numChave);
     }
 }
