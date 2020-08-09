@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#define CHAVES 11 
+#define CHAVES 23 
 #define QTDCARACTERES 16
 
 typedef struct sElemento{
     struct sElemento *next;
     struct sElemento *prev;
-    char nome[QTDCARACTERES];
+	char nome[QTDCARACTERES];
     int id;
 }Elemento;
 
@@ -35,17 +35,17 @@ void atualizaLista(char nomes[][QTDCARACTERES], int numChave);
 
 main(){
 	criaListas();
-    	readArquivoTXT();
+    readArquivoTXT();
 
 	//Pesquisa e remocao de nomes    
-            //char pesquisar[]="JOCELINE";
+        //char pesquisar[]="JOCELINE";
 	    //pesquisaElemento(pesquisar);
-            //removerElemento(pesquisar);
-    	//freeElementos();
-    	//imprimeListas();
+        //removerElemento(pesquisar);
+    //freeElementos();
+    //imprimeListas();
     
 	//Ordenacao de elementos
-	//inicializa_quicksort(0);
+	inicializa_quicksort(0);
 	imprimeListas();
 }
 
@@ -59,18 +59,18 @@ void criaListas(){
 }
 
 void readArquivoTXT(){
-    	FILE *file = fopen("nomes.txt", "r");
+    FILE *file = fopen("nomes.txt", "r");
 	char nome[QTDCARACTERES];
 	while(fgets(nome, QTDCARACTERES, file) != NULL){
 		insereElemento(nome);
 	}
-    	fclose(file);
+    //fclose(file);
 }
 
 void imprimeListas(){
 	Elemento *aux;
 	int total=0;
-    	int i=0;
+    int i=0;
 	//imprime os nomes
 	//for(int i=0; i<CHAVES; i++){
 		aux= chave[0]->head;
@@ -85,15 +85,15 @@ void imprimeListas(){
 	//imprime o size de cada lista
 	for(int i=0; i<CHAVES; i++){
 		printf("%i\n",chave[i]->size);
-        	total= total + chave[i]->size;
+        total= total + chave[i]->size;
 	}
 	printf("\ntotal de nomes: %i\n", total);
 }
 
 int hash(char *nome){
 	int l1= nome[0];
-    	int l2= nome[1];
-    	int l3= nome[2];
+    int l2= nome[1];
+    int l3= nome[2];
 	int i= (l1+l2+l3) % CHAVES;
 	return i;
 }
@@ -101,31 +101,33 @@ int hash(char *nome){
 void insereElemento(char *nome){
 	int nHash= hash(nome);
 	Elemento *pivo= chave[nHash]->tail;
+	
 	Elemento *novo_elemento = (Elemento*)malloc(sizeof(Elemento));
-    	novo_elemento->id= chave[nHash]->size;
-    	int i=0;
-    	while(i<QTDCARACTERES){
-        	novo_elemento->nome[i]= nome[i];
+    novo_elemento->id= chave[nHash]->size;
+    int i=0;
+    while(i<QTDCARACTERES){
+        novo_elemento->nome[i]= nome[i];
 		++i;
-    	}
+    }
 
-    	if(chave[nHash]->size==0){
-        	chave[nHash]->head=novo_elemento;
-        	chave[nHash]->head->prev=NULL;
-        	chave[nHash]->head->next=NULL;
-        	chave[nHash]->tail=novo_elemento;
-    	}else{
-        	novo_elemento->next=pivo->next;
-        	novo_elemento->prev=pivo;
+    if(chave[nHash]->size==0){
+        chave[nHash]->head=novo_elemento;
+        chave[nHash]->head->prev=NULL;
+        chave[nHash]->head->next=NULL;
+        chave[nHash]->tail=novo_elemento;
+    }else{
+        novo_elemento->next=pivo->next;
+        novo_elemento->prev=pivo;
 
-        	if(pivo->next==NULL){
-            		chave[nHash]->tail= novo_elemento;
-        	}else{
-            		pivo->next->prev=novo_elemento;
-        	}
-        	pivo->next=novo_elemento;
-    	}
-    	chave[nHash]->size++;
+        if(pivo->next==NULL){
+            chave[nHash]->tail= novo_elemento;
+        }else{
+            pivo->next->prev=novo_elemento;
+        }
+        pivo->next=novo_elemento;
+    }
+    chave[nHash]->size++;
+    
 }
 
 int qtdCaracteres(char *nome){
@@ -165,13 +167,13 @@ void removerElemento(char *nome){
     int i;
     Elemento *aux= chave[y]->head;
     for(int x=0; x<chave[y]->size; x++){
-	i=0;
+		i=0;
         while(i<numCaracteres){
             if(aux->nome[i]==nome[i]){
                 i++;
             }else{
             	break;
-	    }
+			}
             
             if(i==numCaracteres){
                 if(aux==chave[y]->head){
@@ -190,11 +192,11 @@ void removerElemento(char *nome){
                     }
                 }
                 //ajusta o id de todos os elementos
-		Elemento *aux2= aux->next;
+				Elemento *aux2= aux->next;
                 while(aux2 != NULL){
                 	aux2->id--;
                 	aux2=aux2->next;
-		}
+				}
 				
                 free(aux);
                 chave[y]->size--;
@@ -250,7 +252,7 @@ void inicializa_quicksort(int numChave){
     
     //define o inicio e o fim da matriz
     int inicio=0;
-    int fim= (chave[numChave]->size);
+    int fim= (chave[numChave]->size-1);
     quicksort(nomes, inicio, fim);
     
     atualizaLista(nomes, numChave);
@@ -265,12 +267,16 @@ int particiona(char nomes[][QTDCARACTERES], int inicio, int fim){
     int esq= inicio;
     int dir= fim;
     char aux[QTDCARACTERES];
-    int pivo= hashSort(nomes[inicio][0]);
+    char vetPivo[QTDCARACTERES];
+    for(int i=0; i<QTDCARACTERES; i++){
+    	vetPivo[i]=nomes[inicio][i];
+	}
+    int pivo= hashSort(vetPivo[0]);
     while(esq < dir){
-    	while(hashSort(nomes[esq][0]) <= pivo){
+    	while(pivo >= hashSort(nomes[esq][0])){
     		esq++;
 		}
-		while(hashSort(nomes[dir][0]) > pivo){
+		while(pivo < hashSort(nomes[dir][0])){
 			dir--;
 		}
 		if(esq < dir){
@@ -289,16 +295,16 @@ int particiona(char nomes[][QTDCARACTERES], int inicio, int fim){
 		nomes[inicio][i]= nomes[dir][i];
 	}
 	for(int i=0; i<QTDCARACTERES; i++){
-		nomes[dir][i]= nomes[inicio][i];
+		nomes[dir][i]= vetPivo[i];
 	}
 	return dir;
 }
 
 void quicksort(char nomes[][QTDCARACTERES], int inicio, int fim){
 	int pivo;
-	if(fim>inicio){
-        	pivo= particiona(nomes,inicio, fim);
-        	quicksort(nomes,inicio, pivo-1);
-        	quicksort(nomes,pivo+1, fim);
-    	}
+    if(fim>inicio){
+        pivo= particiona(nomes,inicio, fim);
+        quicksort(nomes,inicio, pivo-1);
+        quicksort(nomes,pivo+1, fim);
+    }
 }
