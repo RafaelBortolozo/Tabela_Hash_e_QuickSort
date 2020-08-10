@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #define CHAVES 23
 #define QTDCARACTERES 16
 
@@ -27,11 +28,9 @@ void pesquisaElemento(char *nome);
 void removerElemento(char *nome);
 void freeElementos();
 
-int hashSort(char letra);
 void inicializa_quicksort(int numChave);
-int particiona(int inicio, int fim, int posCaracter, int numChave);
-void quicksort(int inicio, int fim, int posCaracter, int numChave);
-
+int particiona(int inicio, int fim, int numChave);
+void quicksort(int inicio, int fim, int numChave);
 
 main(){
 	criaListas();
@@ -104,11 +103,7 @@ void insereElemento(char *nome){
 	
 	Elemento *novo_elemento = (Elemento*)malloc(sizeof(Elemento));
     novo_elemento->id= chave[nHash]->size;
-    int i=0;
-    while(i<QTDCARACTERES){
-        novo_elemento->nome[i]= nome[i];
-		++i;
-    }
+    strcpy(novo_elemento->nome, nome);
 
     if(chave[nHash]->size==0){
         chave[nHash]->head=novo_elemento;
@@ -230,18 +225,12 @@ void freeElementos(){
 void inicializa_quicksort(int numChave){
     int inicio=0;
     int fim= (chave[numChave]->size-1);
-    quicksort(inicio, fim, 0, numChave);
+    quicksort(inicio, fim, numChave);
 }
 
-//calculo do hash exclusivo para ordenacao
-int hashSort(char letra){
-    return letra;
-}
-
-int particiona(int inicio, int fim, int posCaracter, int numChave){
+int particiona(int inicio, int fim, int numChave){
     int esq= inicio;
     int dir= fim;
-    char aux[QTDCARACTERES];
     char vetPivo[QTDCARACTERES];
 	
 	//percorre a particao ate encontrar o pivo (primeiro elemento)
@@ -249,20 +238,17 @@ int particiona(int inicio, int fim, int posCaracter, int numChave){
 	while(pesquisa->id != esq){
 		pesquisa= pesquisa->next;
 	}
-	for(int i=0; i<QTDCARACTERES; i++){
-		vetPivo[i]=pesquisa->nome[i];
-	}
+	strcpy(vetPivo, pesquisa->nome);
 	
-	//ponteiros que apontam para o elemento da esquerda e direita
-	Elemento* elementoEsquerda= pesquisa;
-	Elemento* elementoDireita= chave[numChave]->head;
+	//ponteiros que apontam para o elemento da esquerda (inicio) e direita (fim)
+	Elemento* elementoEsquerda= pesquisa; //aponta para a mesma posicao do pivo;
+	Elemento* elementoDireita= chave[numChave]->tail;
 	while(elementoDireita->id != dir){
-		elementoDireita=elementoDireita->next;
+		elementoDireita=elementoDireita->prev;
 	}
 	
-    int pivo= hashSort(vetPivo[posCaracter]);
     while(esq < dir){
-		while(pivo < hashSort(elementoDireita->nome[posCaracter])){
+		while(strcmp(vetPivo, elementoDireita->nome) < 0){
 			if(esq < dir){
 				dir--;
 				elementoDireita= elementoDireita->prev;
@@ -271,16 +257,13 @@ int particiona(int inicio, int fim, int posCaracter, int numChave){
 			}
 		}
 		if(esq < dir){
-			for(int i=0; i<QTDCARACTERES; i++){
-				elementoEsquerda->nome[i]= elementoDireita->nome[i];
-			}
-			for(int i=0; i<QTDCARACTERES; i++){
-				elementoDireita->nome[i]= vetPivo[i];
-			}
+			strcpy(elementoEsquerda->nome, elementoDireita->nome);
+			strcpy(elementoDireita->nome, vetPivo);
+			
 			esq++;
 			elementoEsquerda=elementoEsquerda->next;
 		}
-		while(pivo >= hashSort(elementoEsquerda->nome[posCaracter])){
+		while(strcmp(vetPivo, elementoEsquerda->nome) >= 0){
     		if(esq < dir){
     			esq++;
     			elementoEsquerda= elementoEsquerda->next;
@@ -289,12 +272,8 @@ int particiona(int inicio, int fim, int posCaracter, int numChave){
 			}
 		}
 		if(esq < dir){
-			for(int i=0; i<QTDCARACTERES; i++){
-				elementoDireita->nome[i]= elementoEsquerda->nome[i];
-			}
-			for(int i=0; i<QTDCARACTERES; i++){
-				elementoEsquerda->nome[i]= vetPivo[i];
-			}
+			strcpy(elementoDireita->nome, elementoEsquerda->nome);
+			strcpy(elementoEsquerda->nome, vetPivo);
 			
 			dir--;
 			elementoDireita=elementoDireita->prev;
@@ -303,11 +282,11 @@ int particiona(int inicio, int fim, int posCaracter, int numChave){
 	return dir;
 }
 
-void quicksort(int inicio, int fim, int posCaracter, int numChave){
+void quicksort(int inicio, int fim, int numChave){
 	int pivo;
     if(fim>inicio){
-        pivo= particiona(inicio, fim, posCaracter, numChave);
-        quicksort(inicio, pivo-1, posCaracter, numChave);
-        quicksort(pivo+1, fim, posCaracter, numChave);
+        pivo= particiona(inicio, fim, numChave);
+        quicksort(inicio, pivo-1, numChave);
+        quicksort(pivo+1, fim, numChave);
     }
 }
