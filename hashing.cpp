@@ -21,7 +21,8 @@ Lista *chave[CHAVES];
 void criaListas();
 void readArquivoTXT();
 void imprimeListas();
-int hash(char letra1, char letra2, char letra3);
+int hash(char *nome);
+int ascii(char letra);
 void insereElemento(char *nome);
 int qtdcaracter(char *nome);
 void pesquisaElemento(char *nome);
@@ -37,7 +38,7 @@ main(){
     readArquivoTXT();
 
 	//Pesquisa e remocao de nomes    
-        //char pesquisar[]="JOCELINE";
+        //char pesquisar[]="ADACILDO";
 	    //pesquisaElemento(pesquisar);
         //removerElemento(pesquisar);
     //freeElementos();
@@ -71,15 +72,15 @@ void imprimeListas(){
 	int total=0;
     int i=0;
 	//imprime os nomes
-	//for(int i=0; i<CHAVES; i++){
-		aux= chave[0]->head;
+	for(int i=0; i<CHAVES; i++){
+		aux= chave[i]->head;
 		
 		for(int x=0; x<chave[i]->size ;x++){
 			printf("%i- %s",aux->id,aux->nome);
 			aux= aux->next;
 		}
 		printf("\n\n");
-    //}
+    }
 
 	//imprime o size de cada lista
 	for(int i=0; i<CHAVES; i++){
@@ -89,12 +90,17 @@ void imprimeListas(){
 	printf("\ntotal de nomes: %i\n", total);
 }
 
+int ascii(char letra){
+	return letra;
+}
+
 int hash(char *nome){
-	int l1= nome[0];
-    int l2= nome[1];
-    int l3= nome[2];
-	int i= (l1+l2+l3) % CHAVES;
-	return i;
+	int x=0;
+	for(int i=0; i<10 ;i++){
+		x= x+ascii(nome[i]);
+	}
+	x= (x) % CHAVES;
+	return x;
 }
 
 void insereElemento(char *nome){
@@ -134,11 +140,11 @@ int qtdcaracter(char *nome){
 }
 
 void pesquisaElemento(char *nome){
-    int y= hash(nome);
+    int nHash= hash(nome);
     int numCaracteres= qtdcaracter(nome);
     int i;
-    Elemento *aux= chave[y]->head;
-    for(int x=0; x<chave[y]->size; x++){
+    Elemento *aux= chave[nHash]->head;
+    for(int x=0; x<chave[nHash]->size; x++){
 		i=0;
         while(i<numCaracteres){
             if(aux->nome[i]==nome[i]){
@@ -147,7 +153,7 @@ void pesquisaElemento(char *nome){
             	break;
 			}
             if(i==numCaracteres){
-                printf("\n\nO nome (%s) foi encontrado na chave[%i]", nome, y);
+                printf("\n\nO nome (%s) foi encontrado na chave[%i]", nome, nHash);
                 return;
             } 
         }
@@ -157,11 +163,11 @@ void pesquisaElemento(char *nome){
 }
 
 void removerElemento(char *nome){
-    int y= hash(nome);
+    int nHash= hash(nome);
     int numCaracteres= qtdcaracter(nome);
     int i;
-    Elemento *aux= chave[y]->head;
-    for(int x=0; x<chave[y]->size; x++){
+    Elemento *aux= chave[nHash]->head;
+    for(int x=0; x<chave[nHash]->size; x++){
 		i=0;
         while(i<numCaracteres){
             if(aux->nome[i]==nome[i]){
@@ -171,17 +177,17 @@ void removerElemento(char *nome){
 			}
             
             if(i==numCaracteres){
-                if(aux==chave[y]->head){
-                    chave[y]->head = aux->next;
-                    if(chave[y]->head==NULL){
-                        chave[y]->tail=NULL;
+                if(aux==chave[nHash]->head){
+                    chave[nHash]->head = aux->next;
+                    if(chave[nHash]->head==NULL){
+                        chave[nHash]->tail=NULL;
                     }else{
                         aux->next->prev=NULL;
                     }
                 }else{
                     aux->prev->next = aux->next;
                     if(aux->next==NULL){
-                        chave[y]->tail= aux->prev;
+                        chave[nHash]->tail= aux->prev;
                     }else{
                         aux->next->prev = aux->prev;
                     }
@@ -194,8 +200,8 @@ void removerElemento(char *nome){
 				}
 				
                 free(aux);
-                chave[y]->size--;
-                printf("\n\nO nome (%s) foi removido da chave[%i]", nome, y);
+                chave[nHash]->size--;
+                printf("\n\nO nome (%s) foi removido da chave[%i]", nome, nHash);
                 return;
             } 
         }
@@ -206,19 +212,19 @@ void removerElemento(char *nome){
 
 void freeElementos(){
     Elemento *aux;
-    for(int x=0; x<CHAVES ;x++){
-        while(chave[x]->size>0){
-            aux= chave[x]->head;
-            chave[x]->head = aux->next;
-            if(chave[x]->head==NULL){
-                chave[x]->tail=NULL;
+    for(int i=0; i<CHAVES ;i++){
+        while(chave[i]->size>0){
+            aux= chave[i]->head;
+            chave[i]->head = aux->next;
+            if(chave[i]->head==NULL){
+                chave[i]->tail=NULL;
             }else{
                 aux->next->prev=NULL;
             }
             free(aux);
-            chave[x]->size--;
+            chave[i]->size--;
         }
-        free(chave[x]);
+        free(chave[i]);
     }
 }
 
@@ -259,7 +265,6 @@ int particiona(int inicio, int fim, int numChave){
 		if(esq < dir){
 			strcpy(elementoEsquerda->nome, elementoDireita->nome);
 			strcpy(elementoDireita->nome, vetPivo);
-			
 			esq++;
 			elementoEsquerda=elementoEsquerda->next;
 		}
@@ -274,7 +279,6 @@ int particiona(int inicio, int fim, int numChave){
 		if(esq < dir){
 			strcpy(elementoDireita->nome, elementoEsquerda->nome);
 			strcpy(elementoEsquerda->nome, vetPivo);
-			
 			dir--;
 			elementoDireita=elementoDireita->prev;
 		}
